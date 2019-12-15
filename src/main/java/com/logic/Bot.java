@@ -2,6 +2,7 @@ package com.logic;
 
 import com.net.Data;
 import com.net.Perceptron;
+import com.net.Sample;
 import com.net.Utils;
 import org.telegram.telegrambots.api.methods.send.SendDocument;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
@@ -12,12 +13,12 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Bot extends TelegramLongPollingBot {
     private final String token = System.getenv("bot_token");
     private final String botname = System.getenv("bot_name");
-//    private Data data;
     private Perceptron perceptron;
     private Integer enters;
     private Integer exits;
@@ -27,9 +28,7 @@ public class Bot extends TelegramLongPollingBot {
         long chat_id = update.getMessage().getChatId();
 
         if (update.hasMessage() && update.getMessage().hasText()) {
-//            = update.getMessage().getChatId();
             Message msg = update.getMessage();
-//            long chat_id = msg.getChatId();
             String txt = msg.getText();
 
             if(txt.equals("/start")){
@@ -48,8 +47,6 @@ public class Bot extends TelegramLongPollingBot {
                     String text = "Нейронная сеть не инициализирована. Создайте новую сеть командой /newnet";
                     responseText(text, chat_id);
                 }
-//                    String text = "Количество входов: " + ent;
-//                    responseText(text, chat_id);
             }
 
             if(txt.equals("/newnet")){
@@ -59,14 +56,12 @@ public class Bot extends TelegramLongPollingBot {
                                 + "Входов: " + enters + System.lineSeparator()
                                 + "Выходов: " + exits;
                     responseText(text, chat_id);
-//                    exits = null;
-//                    ent = null;
                 } catch (Exception e){
                     responseText("Сеть не инициализирована, не хватает данных. Введите количество входов (EN) и выходов (EX)", chat_id);
                 }
             }
 
-            if(txt.equals("/teachSamples")){
+            if(txt.equals("/samples")){
                 File uploadDir = new File(Utils.getUploadDir());
 //                Collection<File> files = FileUtils.listFiles(uploadDir, new String[] {"java"}, true);
                 String[] files = uploadDir.list(); //список файлов в директории
@@ -100,7 +95,7 @@ public class Bot extends TelegramLongPollingBot {
                                 responseText("Ошибка сохранения лога обучения", chat_id);
                             }
                             try {
-                                File savedLog = new File(Utils.getOutputDir() + perceptron.getName() + ".txt");
+                                File savedLog = new File(Utils.getOutputDir() + perceptron.getName() + "_log.txt");
                                 String msgtext = perceptron.getName() + "_" + splited[splited.length-1];
                                 sendDocUploadingAFile(chat_id, savedLog, msgtext);
                             } catch(TelegramApiException e){
@@ -142,6 +137,37 @@ public class Bot extends TelegramLongPollingBot {
                     }
                 } else {
                     responseText("Введите название сети через пробел после команды", chat_id);
+                }
+
+            }
+
+            if(txt.contains("/use")){
+                String[] splited = update.getMessage().getText().split(" ");
+                if(perceptron != null){
+                    if(splited.length > 1){
+                        if(splited.length != perceptron.getA()){
+                            List<Double> enter = new ArrayList<>();
+                            String text = "Значения на входе:" + System.lineSeparator();
+                            for (int i = 1; i < splited.length; i++) {
+                                enter.add(Double.parseDouble(splited[i]));
+                                text += splited[i] + " ";
+                            }
+                            text += System.lineSeparator() + "Значения на выходе:" + System.lineSeparator();
+
+                            Sample response = perceptron.use(new Sample(enter));
+                            for (Double d :response.getExit()){
+                                text += d.toString() + " ";
+                            }
+                            responseText(text, chat_id);
+
+                        } else {
+                            responseText("Неверное количество входных значений" + System.lineSeparator() + "Необходимо: " + perceptron.getA(), chat_id);
+                        }
+                    } else {
+                        responseText("Введите входные значения через пробел после команды use", chat_id);
+                    }
+                } else {
+                    responseText("Нейронная сеть не инициализирована. Создайте новую сеть командой /newnet", chat_id);
                 }
 
             }
@@ -299,8 +325,6 @@ public class Bot extends TelegramLongPollingBot {
             }
 
 
-
-
             // Set variables
 
 //            InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
@@ -406,10 +430,11 @@ public class Bot extends TelegramLongPollingBot {
     private void responseHelp(long chat_id){
         String text = "/newnet - создать новую сеть" + System.lineSeparator()
                 + "/netinfo - информация о текущей сети" + System.lineSeparator()
-                + "/teachSamples - список загруженных файлов с выборками" + System.lineSeparator()
+                + "/samples - список загруженных файлов с выборками" + System.lineSeparator()
                 + "/teach filename - обучить текущую нейроную сеть на основек обучающей выборки filename" + System.lineSeparator()
                 + "/save - сохранить текущую нейронную сеть" + System.lineSeparator()
                 + "/load name - загрузить сеть с именем name" + System.lineSeparator()
+                + "/use [enter1, enter2 ...] - подать значения на вход нейронной сети" + System.lineSeparator()
                 + "EN - количество входов" + System.lineSeparator()
                 + "EX - количество выходов" + System.lineSeparator()
                 + "NAME - название" + System.lineSeparator()

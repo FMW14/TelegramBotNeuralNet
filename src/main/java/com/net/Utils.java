@@ -20,14 +20,11 @@ public class Utils {
     private final static String uploadDirName = "Upload"; //путь для загруженных выборок
     private final static String netsDirName = "Nets"; //путь для сохраненных обученных сетей
 
-//    private final static String baseFile = System.getProperty("user.home") + "\\NeuralNet\\" + "perceptron.json";
-
     public static void toJSON(Perceptron perceptron) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         File file = new File(getNetsDir() + perceptron.getName() + ".json");
         mapper.writeValue(file, perceptron);
         System.out.println("json created!");
-
     }
 
     public static Perceptron toJavaObject(String name) throws IOException {
@@ -93,28 +90,11 @@ public class Utils {
             parsed.add(new Sample(enter, exit));
         }
 
-
-
-//        Limits limits = new Limits(minEn, maxEn, minEx, maxEx);
-
         Limits limits = findMinMax(parsed);
 
         List<Sample> normData = new ArrayList<>();
         for (Sample s : parsed){    //вычисление нормализованных значений входов и выходов
-//            List<Double> normEnter = new ArrayList<>();
-//            List<Double> normExit = new ArrayList<>();
-//
-//            for (int i = 0; i < s.getEnter().size(); i++) {
-//                normEnter.add(
-//                        (s.getEnter().get(i) - minEn.get(i))/(maxEn.get(i) - minEn.get(i))
-//                );
-//            }
-//
-//            for (int i = 0; i < s.getExit().size(); i++) {
-//                normExit.add(
-//                        (s.getExit().get(i) - minEx.get(i))/(maxEx.get(i) - minEx.get(i))
-//                );
-//            }
+
             normData.add(normalizeOneSample(s, limits));
         }
 
@@ -164,16 +144,7 @@ public class Utils {
             );
         }
 
-//        if (s.getExit().size() != 0){
-//            for (int i = 0; i < s.getExit().size(); i++) {
-//                normExit.add(
-//                        (s.getExit().get(i) - limits.getMinEx().get(i)) / (limits.getMaxEx().get(i) - limits.getMinEx().get(i))
-//                );
-//            }
-//        }
-
         return new Sample(Enter, Exit);
-
     }
 
 
@@ -235,12 +206,11 @@ public class Utils {
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
         rbc.close();
-//        uploadFlag = 0;
         System.out.println("Uploaded!");
     }
 
     public static void saveTeachLog(List<String> teachLog, String name) throws IOException{
-        FileOutputStream fstream = new FileOutputStream(getOutputDir() + "Net" + name + "_log.txt");
+        FileOutputStream fstream = new FileOutputStream(getOutputDir() + name + "_log.txt");
         BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fstream));
 
         for (String d : teachLog){
@@ -286,9 +256,5 @@ public class Utils {
             return netsDirName; //SOBAD
         }
     }
-
-    //    public static void makeHomeDir(String dir){
-//        new File(dir).mkdirs();
-//    }
 
 }
