@@ -43,12 +43,7 @@ public class Bot extends TelegramLongPollingBot {
 
             if(txt.equals("/netinfo")){
                 if(perceptron != null){
-                    String text = "Название:" + perceptron.getName()
-                                + "Кол-во входов:"
-                                + "Кол-во выходов"
-                                + "";
-
-                    responseText(text, chat_id);
+                    responseText(perceptron.toString(), chat_id);
                 } else {
                     String text = "Нейронная сеть не инициализирована. Создайте новую сеть командой /newnet";
                     responseText(text, chat_id);
@@ -140,6 +135,7 @@ public class Bot extends TelegramLongPollingBot {
                 if(splited.length > 1){
                     try {
                         perceptron = Utils.toJavaObject(splited[1]);
+                        responseText("Сеть " + perceptron.getName() + " загружена", chat_id);
                     } catch (IOException e){
                         System.out.println(e);
                         responseText("Ошибка загрузки сети", chat_id);

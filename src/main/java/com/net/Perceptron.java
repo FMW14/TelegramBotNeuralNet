@@ -29,10 +29,10 @@ public class Perceptron {
     private Double v;
 
     @JsonProperty("era")
-    private Integer era = 0;
+    private Integer era;
 
     @JsonProperty("comError")
-    private double comError = 0;
+    private Double comError;
 
     @JsonProperty("neurons")
     private List<Neuron> neurons = new ArrayList<>();
@@ -159,11 +159,11 @@ public class Perceptron {
         this.limits = limits;
     }
 
-    public double getComError() {
+    public Double getComError() {
         return comError;
     }
 
-    public void setComError(double comError) {
+    public void setComError(Double comError) {
         this.comError = comError;
     }
 
@@ -237,5 +237,24 @@ public class Perceptron {
 
     public void setNeurons(List<Neuron> neurons) {
         this.neurons = neurons;
+    }
+
+    @Override
+    public String toString() {
+        String response = "Текущие настройки сети " + getName() + ":" + System.lineSeparator();
+        response += "E: " + getComError() + System.lineSeparator()
+                + "Кол-во входов: " + getA() + System.lineSeparator()
+                + "Кол-во выходов: " + getB() + System.lineSeparator()
+                + "Актив. функция: " + getFunc() + System.lineSeparator()
+                + "ALPHA: " + getAlpha() + System.lineSeparator()
+                + "T: " + getT() + System.lineSeparator()
+                + "V: " + getV() + System.lineSeparator()
+                + "ERA: " + getEra() + System.lineSeparator() + System.lineSeparator();
+
+        if(limits != null){
+            response += limits.toString();
+        }
+
+        return response;
     }
 }

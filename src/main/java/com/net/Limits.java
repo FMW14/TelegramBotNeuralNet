@@ -60,4 +60,18 @@ public class Limits {
     public void setMaxEx(List<Double> maxEx) {
         this.maxEx = maxEx;
     }
+
+    @Override
+    public String toString() {
+        String response = "Ограничения по каждому входу: " + System.lineSeparator();
+
+        int numberOfEnters = getMinEn().size();
+
+        for (int i = 0; i < numberOfEnters; i++) {
+            response += "Вход " + i + ": от " + getMinEn().get(i) + " до " + getMaxEn().get(i) + System.lineSeparator();
+        }
+
+
+        return response;
+    }
 }
