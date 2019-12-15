@@ -20,16 +20,16 @@ public class Perceptron {
     private int b = 0; //количество выходов и нейронов
 
     @JsonProperty("alpha")
-    private double alpha = 0;
+    private Double alpha;
 
     @JsonProperty("t")
-    private double T = 0;
+    private Double T;
 
     @JsonProperty("v")
-    private double v = 0;
+    private Double v;
 
     @JsonProperty("era")
-    private double era = 0;
+    private Integer era = 0;
 
     @JsonProperty("comError")
     private double comError = 0;
@@ -58,14 +58,15 @@ public class Perceptron {
         }
     }
 
-    public void teach(Data data, double v, double alp, double t, int era){
+    public List<String> teach(Data data){
         DecimalFormat f = new DecimalFormat("0.00000");
+        List<String> teachLog = new ArrayList<>();
 
         limits = data.getLimits();
-        alpha = alp;
-        this.T = t;
+//        alpha = alp;
+//        this.T = t;
 
-        for (int i = 0; i < era; i++) {
+        for (int i = 0; i < this.era; i++) {
             Collections.shuffle(data.getNormData());
             double err = 0;
 
@@ -77,12 +78,12 @@ public class Perceptron {
 
                     neuron.calculateCondition(s.getEnter()); //подача нормализованных значений на вход
 
-                    if(!func.equals("sig") && !func.equals("tan")){
+                    if(func.equals("sig") || !func.equals("tan")){
                         if (func.equals("sig")){ //применение активационной функции
-                            neuron.actFuncSig(alp, T);
+                            neuron.actFuncSig(this.alpha, this.T);
                         }
                         if (func.equals("tan")){
-                            neuron.actFuncHyperTan(alp);
+                            neuron.actFuncHyperTan(this.alpha);
                         }
                     } else {
                         System.out.println("Неизвестная активационная функция");
@@ -101,12 +102,12 @@ public class Perceptron {
 
                 int z = 0;
                 for (Neuron neuron : neurons){ //вычисление новых вес. коэф.
-                    neuron.setW0(neuron.getW0() + (v * deltas.get(z)));
+                    neuron.setW0(neuron.getW0() + (this.v * deltas.get(z)));
                     List<Double> newWeights = new ArrayList<>();
 
                     for (int j = 0; j < neuron.getWeights().size(); j++) {
                         newWeights.add(
-                                neuron.getWeights().get(j) + (v * deltas.get(z) * s.getEnter().get(j))
+                                neuron.getWeights().get(j) + (this.v * deltas.get(z) * s.getEnter().get(j))
                         );
                     }
 
@@ -119,8 +120,11 @@ public class Perceptron {
             double z = 1/sizeb;
             double err2 = Math.sqrt( z * err);
             comError = err2;
+            teachLog.add(f.format(err2));
 //            System.out.println("E" + i + " = " + f.format(err2));
         }
+
+        return teachLog;
 
 //        System.out.println("Train finished");
     }
@@ -163,19 +167,19 @@ public class Perceptron {
         this.comError = comError;
     }
 
-    public double getAlpha() {
+    public Double getAlpha() {
         return alpha;
     }
 
-    public void setAlpha(double alpha) {
+    public void setAlpha(Double alpha) {
         this.alpha = alpha;
     }
 
-    public double getT() {
+    public Double getT() {
         return T;
     }
 
-    public void setT(double t) {
+    public void setT(Double t) {
         T = t;
     }
 
@@ -195,19 +199,19 @@ public class Perceptron {
         this.b = b;
     }
 
-    public double getV() {
+    public Double getV() {
         return v;
     }
 
-    public double getEra() {
+    public Integer getEra() {
         return era;
     }
 
-    public void setEra(double era) {
+    public void setEra(Integer era) {
         this.era = era;
     }
 
-    public void setV(double v) {
+    public void setV(Double v) {
         this.v = v;
     }
 

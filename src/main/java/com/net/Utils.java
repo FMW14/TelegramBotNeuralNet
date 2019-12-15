@@ -2,52 +2,38 @@ package com.net;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.SystemUtils;
+import org.json.JSONObject;
 
 import java.io.*;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
-    private final static String parentDirName = "NeuralNet";
-    private final static String outputDirName = "Output";
-    private final static String inputDirName = "Input";
-    private final static String nets = "Nets";
+    private final static String lSep = "/";
+    private final static String wSep = "\\";
 
-    private final static String baseFile = System.getProperty("user.home") + "\\NeuralNet\\" + "perceptron.json";
+    private final static String parentDirName = "NeuralNet"; //родительская директория
+    private final static String outputDirName = "Output"; //путь для выгрузки лога обучения сети
+    private final static String uploadDirName = "Upload"; //путь для загруженных выборок
+    private final static String netsDirName = "Nets"; //путь для сохраненных обученных сетей
+
+//    private final static String baseFile = System.getProperty("user.home") + "\\NeuralNet\\" + "perceptron.json";
 
     public static void toJSON(Perceptron perceptron) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        File file;
+        File file = new File(getNetsDir() + perceptron.getName() + ".json");
+        mapper.writeValue(file, perceptron);
+        System.out.println("json created!");
 
-        if(SystemUtils.IS_OS_LINUX){
-            file = new File(System.getProperty("user.home") + "/" + parentDirName + "/" + nets + "/" + perceptron.getName() + ".json");
-            mapper.writeValue(file, perceptron);
-            System.out.println("json created!");
-        }
-
-        if (SystemUtils.IS_OS_WINDOWS){
-            file = new File(System.getProperty("user.home") + "\\" + parentDirName + "\\" + nets + "\\" + perceptron.getName() + ".json");
-            mapper.writeValue(file, perceptron);
-            System.out.println("json created!");
-        }
     }
 
     public static Perceptron toJavaObject(String name) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
-        File file;
-
-        if(SystemUtils.IS_OS_LINUX){
-            file = new File(System.getProperty("user.home") + "/" + parentDirName + "/" + nets + "/" + name + ".json");
-            System.out.println("json readed");
-        }
-
-        if (SystemUtils.IS_OS_WINDOWS){
-            file = new File(System.getProperty("user.home") + "\\" + parentDirName + "\\" + nets + "\\" + name + ".json");
-            System.out.println("json readed");
-        } else {
-            return null; //TODO something
-        }
-
+        File file = new File(getNetsDir() + name + ".json");
+        System.out.println("json readed");
         return mapper.readValue(file, Perceptron.class);
     }
 
@@ -64,24 +50,9 @@ public class Utils {
     }
 
     public static void createDirs(){
-        if(SystemUtils.IS_OS_LINUX){
-            final File outputDir = new File(System.getProperty("user.home") + "/" + parentDirName + "/" + outputDirName);
-            final File inputDir = new File(System.getProperty("user.home") + "/" + parentDirName + "/" + inputDirName);
-            final File netsDir = new File(System.getProperty("user.home") + "/" + parentDirName + "/" + nets);
-            makeDir(outputDir);
-            makeDir(inputDir);
-            makeDir(netsDir);
-
-        }
-
-        if (SystemUtils.IS_OS_WINDOWS){
-            final File outputDir = new File(System.getProperty("user.home") + "\\" + parentDirName + "\\" + outputDirName);
-            final File inputDir = new File(System.getProperty("user.home") + "\\" + parentDirName + "\\" + inputDirName);
-            final File netsDir = new File(System.getProperty("user.home") + "\\" + parentDirName + "\\" + nets);
-            makeDir(outputDir);
-            makeDir(inputDir);
-            makeDir(netsDir);
-        }
+        makeDir(new File(getUploadDir()));
+        makeDir(new File(getNetsDir()));
+        makeDir(new File(getOutputDir()));
     }
 
     public static List<String> readSamples(String filename){
@@ -249,7 +220,74 @@ public class Utils {
         return new Limits(minEn, maxEn, minEx, maxEx);
     }
 
-//    public static void makeHomeDir(String dir){
+    public static void uploadFile(String file_name, String file_id) throws IOException{
+        URL url = new URL("https://api.telegram.org/bot"+System.getenv("bot_token")+"/getFile?file_id="+file_id);
+        BufferedReader in = new BufferedReader(new InputStreamReader( url.openStream()));
+        String res = in.readLine();
+        JSONObject jresult = new JSONObject(res);
+        JSONObject path = jresult.getJSONObject("result");
+        String file_path = path.getString("file_path");
+        URL downoload = new URL("https://api.telegram.org/file/bot" + System.getenv("bot_token") + "/" + file_path);
+        FileOutputStream fos = new FileOutputStream(getUploadDir() + file_name);
+
+        System.out.println("Start upload");
+        ReadableByteChannel rbc = Channels.newChannel(downoload.openStream());
+        fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+        fos.close();
+        rbc.close();
+//        uploadFlag = 0;
+        System.out.println("Uploaded!");
+    }
+
+    public static void saveTeachLog(List<String> teachLog, String name) throws IOException{
+        FileOutputStream fstream = new FileOutputStream(getOutputDir() + "Net" + name + "_log.txt");
+        BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fstream));
+
+        for (String d : teachLog){
+            br.write(d);
+            br.write(System.lineSeparator());
+        }
+
+        br.flush();
+        fstream.close();
+
+        System.out.println("Лог обучения сети " + name + " записан");
+    }
+
+    public static String getUploadDir() {
+        if(SystemUtils.IS_OS_LINUX){
+            return System.getProperty("user.home") + lSep + parentDirName + lSep + uploadDirName + lSep;
+        }
+        if(SystemUtils.IS_OS_WINDOWS){
+            return System.getProperty("user.home") + wSep + parentDirName + wSep + uploadDirName + wSep;
+        } else {
+            return uploadDirName; //SOBAD
+        }
+    }
+
+    public static String getOutputDir() {
+        if(SystemUtils.IS_OS_LINUX){
+            return System.getProperty("user.home") + lSep + parentDirName + lSep + outputDirName + lSep;
+        }
+        if(SystemUtils.IS_OS_WINDOWS){
+            return System.getProperty("user.home") + wSep + parentDirName + wSep + outputDirName  + wSep;
+        } else {
+            return outputDirName ; //SOBAD
+        }
+    }
+
+    public static String getNetsDir() {
+        if(SystemUtils.IS_OS_LINUX){
+            return System.getProperty("user.home") + lSep + parentDirName + lSep + netsDirName + lSep;
+        }
+        if(SystemUtils.IS_OS_WINDOWS){
+            return System.getProperty("user.home") + wSep + parentDirName + wSep + netsDirName + wSep;
+        } else {
+            return netsDirName; //SOBAD
+        }
+    }
+
+    //    public static void makeHomeDir(String dir){
 //        new File(dir).mkdirs();
 //    }
 
