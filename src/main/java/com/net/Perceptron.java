@@ -78,7 +78,7 @@ public class Perceptron {
 
                     neuron.calculateCondition(s.getEnter()); //подача нормализованных значений на вход
 
-                    if(func.equals("sig") || !func.equals("tan")){
+                    if(func.equals("sig") || func.equals("tan")){
                         if (func.equals("sig")){ //применение активационной функции
                             neuron.actFuncSig(this.alpha, this.T);
                         }
